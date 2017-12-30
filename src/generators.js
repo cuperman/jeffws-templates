@@ -1,9 +1,11 @@
 'use strict';
 
+const omit = require('lodash/omit');
+
 const { codeBucketName, codeZipFilename, tableName, functionName,
         functionRoleName, functionHandlerName, tableEnvVarName,
         apiName, apiResourceName, apiMethodName, apiPermissionName,
-        apiDeploymentName, apiHumanReadableName, apiPathPart } = require('./conventions');
+        apiDeploymentName, apiHumanReadableName, apiPathPart, apiPathMatcher, apiUrlName } = require('./conventions');
 const Template = require('./template');
 const { Bucket } = require('./resources/s3');
 const { Table, STRING } = require('./resources/dynamodb');
@@ -132,17 +134,28 @@ exports.generateDataFunction = function(resourceString, handlerString) {
 };
 
 // Generates a Rest API, Resources, Method, Lambda Permission Definitions, and Deployment Definitions
-function generateApiMethod(resourceString, typeString, methodString, handlerString) {
+function generateApiMethod(resourceString, typeString, methodString, handlerString, stageString = 'prod') {
   const ApiName = apiName(resourceString);
   const ApiCollectionResourceName = apiResourceName(resourceString, 'collection');
   const ApiMemberResourceName = apiResourceName(resourceString, 'member');
   const ApiMethodName = apiMethodName(resourceString, methodString, typeString);
   const ApiPermissionName = apiPermissionName(resourceString, typeString, methodString, handlerString);
   const ApiDeployment = apiDeploymentName(resourceString, 'prod');
+  const FunctionName = functionName(resourceString, handlerString);
+  const LambdaPermissionName = apiPermissionName(resourceString, typeString, methodString, handlerString);
+  const ApiUrlName = apiUrlName(resourceString, stageString);
 
-  return Template({
+  const resources = {
     [ApiName]: RestApi({
       name: apiHumanReadableName(resourceString)
+    }),
+
+    [ApiDeployment]: Deployment({
+      restApiName: ApiName,
+      stageName: stageString,
+      dependencies: [
+        ApiMethodName
+      ]
     }),
 
     [ApiCollectionResourceName]: Resource({
@@ -160,17 +173,30 @@ function generateApiMethod(resourceString, typeString, methodString, handlerStri
       httpMethod: methodString,
       restApiName: ApiName,
       resourceName: typeString === 'member' ? ApiMemberResourceName : ApiCollectionResourceName,
-      functionName: functionName(resourceString, handlerString)
+      functionName: FunctionName
     }),
 
-    // [LambdaPermissionName]: Permission({
-    //
-    // }),
-    //
-    // [ApiDeployment]: Deployment({
-    //
-    // })
-  });
+    [LambdaPermissionName]: Permission({
+      restApiName: ApiName,
+      httpMethod: methodString,
+      pathMatcher: apiPathMatcher(resourceString, typeString),
+      functionName: FunctionName
+    })
+  };
+
+  const outputs = {
+    [ApiUrlName]: {
+      Value: {
+        'Fn::Sub': `https://\${${ApiName}}.execute-api.\${AWS::Region}.amazonaws.com/${stageString}`
+      }
+    }
+  };
+
+  if (typeString === 'member') {
+    return Template(resources, outputs);
+  } else {
+    return Template(omit(resources, ApiMemberResourceName), outputs);
+  }
 }
 exports.generateApiMethod = generateApiMethod;
 

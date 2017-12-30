@@ -17,14 +17,7 @@ if (!resource) {
 }
 
 console.log(`Generating DynamoDB Table...`);
-const tableDef = generateTable(resource, 'ID', 'S');
-
-console.log(`Generating template updates...`);
-const templateDef = merge(
-  {},
-  Template({}, {}, packageDescription),
-  tableDef
-);
+const templateDef = generateTable(resource, 'ID', 'S');
 
 console.log('Updating template.json...')
 mergeTemplate(templateDef)

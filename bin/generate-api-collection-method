@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+
+const { merge } = require('lodash');
+
+const packageJson = require('../package.json');
+const Template = require('../src/template');
+const { generateApiCollectionMethod } = require('../src/generators');
+const { mergeTemplate } = require('../src/cli');
+
+const packageName = packageJson.name;
+const packageDescription = packageJson.description;
+const [node, script, resource, method, handler] = process.argv;
+
+if (!(resource && method && handler)) {
+  console.error('arguments required: resource, method, and handler');
+  process.exit(1);
+}
+
+console.log(`Generating Method...`);
+const templateDef = generateApiCollectionMethod(resource, method, handler);
+
+console.log('Updating template.json...')
+mergeTemplate(templateDef)
+  .then(() => {
+    console.log('Done.');
+    process.exit(0);
+  })
+  .catch(err => {
+    console.error(`Failed to write file: ${err}`);
+    process.exit(1);
+  });

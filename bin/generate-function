@@ -17,17 +17,10 @@ if (!(resource && handler)) {
 }
 
 console.log(`Generating Lambda Function...`);
-const functionDef = generateFunction(resource, handler);
-
-console.log(`Generating template updates...`);
-const templateDef = merge(
-  {},
-  Template({}, {}, packageDescription),
-  functionDef
-);
+const templateDef = generateFunction(resource, handler);
 
 console.log('Updating template.json...')
-mergeTemplate(functionDef)
+mergeTemplate(templateDef)
   .then(() => {
     console.log('Done.');
     process.exit(0);

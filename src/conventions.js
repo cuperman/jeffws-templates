@@ -53,6 +53,12 @@ exports.apiName = function(resource) {
   return `${resourceName}Api`;
 };
 
+exports.apiUrlName = function(resource, stage) {
+  const resourceName = upperFirst(camelCase(resource));
+  const stageName = upperFirst(camelCase(stage));
+  return `${resourceName}ApiUrl${stageName}`;
+};
+
 exports.apiHumanReadableName = function(resource) {
   return capitalize(join(words([packageJson.name, resource, 'API']), ' '));
 };
@@ -75,6 +81,15 @@ exports.apiPathPart = function(resource, type) {
     return `{${lowerCase(camelCase(resource))}Id}`;
   } else {
     return pluralize(lowerCase(snakeCase(resource)));
+  }
+};
+
+exports.apiPathMatcher = function(resource, type) {
+  const pathRoot = pluralize(lowerCase(snakeCase(resource)));
+  if (type === 'member') {
+    return pathRoot + '/*';
+  } else {
+    return pathRoot;
   }
 };
 

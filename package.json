@@ -5,11 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "npm run deploy:package && npm run deploy:create && npm run deploy:describe",
-    "deploy:package": "aws s3 cp ./package/jeffws-templates.zip s3://my-stack-codebucket-18rh4b0n30ax6",
-    "deploy:create": "aws cloudformation deploy --template-file ./template.json --stack-name my-stack --capabilities CAPABILITY_IAM",
-    "deploy:describe": "aws cloudformation describe-stacks --stack-name my-stack",
-    "deploy:destroy": "aws cloudformation delete-stack --stack-name my-stack"
+    "deploy": "npm run deploy:code && npm run deploy:stack && npm run deploy:describe",
+    "deploy:code": "aws s3 cp ./package/jeffws-templates.zip s3://`cat package/stack.json | grep codebucket | cut -f 4 -d '\"'`",
+    "deploy:stack": "aws cloudformation deploy --template-file ./template.json --stack-name jeffws-templates --capabilities CAPABILITY_IAM && npm run deploy:describe | tee ./package/stack.json",
+    "deploy:describe": "aws cloudformation describe-stacks --stack-name jeffws-templates",
+    "deploy:destroy": "aws cloudformation delete-stack --stack-name jeffws-templates"
   },
   "author": "Jeff Cooper",
   "license": "MIT",

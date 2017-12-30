@@ -1,0 +1,52 @@
+#!/usr/bin/env node
+
+const { merge } = require('lodash');
+
+const packageJson = require('../package.json');
+const Template = require('../src/template');
+const { generateCodeBucket, generateTable, generateFunction,
+        generateDataFunction, generateApiCollectionMethod,
+        generateApiMemberMethod } = require('../src/generators');
+const { mergeTemplate } = require('../src/cli');
+
+const packageName = packageJson.name;
+const packageDescription = packageJson.description;
+const [node, script, resource, hashKeyDesc, rangeKeyDesc] = process.argv;
+
+if (!resource) {
+  console.error('argument required: resource');
+  process.exit(1);
+}
+
+console.log(`Generating DynamoDB Table...`);
+const templateDef = merge(
+  {},
+
+  generateTable(resource, 'ID', 'S'),
+
+  generateFunction(resource, 'preflight'),
+  generateDataFunction(resource, 'create'),
+  generateDataFunction(resource, 'index'),
+  generateDataFunction(resource, 'show'),
+  generateDataFunction(resource, 'update'),
+  generateDataFunction(resource, 'destroy'),
+
+  generateApiCollectionMethod(resource, 'options', 'preflight'),
+  generateApiCollectionMethod(resource, 'post', 'create'),
+  generateApiCollectionMethod(resource, 'get', 'index'),
+  generateApiMemberMethod(resource, 'get', 'show'),
+  generateApiMemberMethod(resource, 'put', 'update'),
+  generateApiMemberMethod(resource, 'patch', 'update'),
+  generateApiMemberMethod(resource, 'delete', 'destroy')
+)
+
+console.log('Updating template.json...')
+mergeTemplate(templateDef)
+  .then(() => {
+    console.log('Done.');
+    process.exit(0);
+  })
+  .catch(err => {
+    console.error(`Failed to write file: ${err}`);
+    process.exit(1);
+  });

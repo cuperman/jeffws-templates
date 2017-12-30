@@ -12,13 +12,10 @@ const packageDescription = packageJson.description;
 const [node, script, resource, hashKeyDesc, rangeKeyDesc] = process.argv;
 
 console.log(`Generating stack...`);
-const stackDef = generateStack();
-
-console.log(`Generating template updates...`);
 const templateDef = merge(
   {},
   Template({}, {}, packageDescription),
-  stackDef
+  generateStack()
 );
 
 console.log('Updating template.json...')

@@ -4,13 +4,17 @@ const API_GATEWAY_METHOD = 'AWS::ApiGateway::Method';
 
 module.exports = function(properties = {}) {
   const AuthorizationType = 'NONE';
+
   const HttpMethod = upperCase(properties.httpMethod);
+
   const RestApiId = {
     Ref: properties.restApiName
   };
+
   const ResourceId = {
     Ref: properties.resourceName
   };
+
   const Integration = {
     Type: 'AWS_PROXY',
     IntegrationHttpMethod: 'POST',
