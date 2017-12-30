@@ -1,0 +1,7 @@
+/node_modules
+/package
+
+template.json
+template-output.yml
+
+.tm_properties

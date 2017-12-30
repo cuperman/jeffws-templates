@@ -1,0 +1,19 @@
+{
+  "name": "jeffws-templates",
+  "version": "1.0.0",
+  "description": "Generators for cloud formation templates",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "npm run deploy:package && npm run deploy:create && npm run deploy:describe",
+    "deploy:package": "aws s3 cp ./package/jeffws-templates.zip s3://my-stack-codebucket-18rh4b0n30ax6",
+    "deploy:create": "aws cloudformation deploy --template-file ./template.json --stack-name my-stack --capabilities CAPABILITY_IAM",
+    "deploy:describe": "aws cloudformation describe-stacks --stack-name my-stack",
+    "deploy:destroy": "aws cloudformation delete-stack --stack-name my-stack"
+  },
+  "author": "Jeff Cooper",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^4.17.4"
+  }
+}

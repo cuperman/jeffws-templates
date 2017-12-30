@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+
+const { merge } = require('lodash');
+
+const packageJson = require('../package.json');
+const Template = require('../src/template');
+const { generateDataFunction } = require('../src/generators');
+const { mergeTemplate } = require('../src/cli');
+
+const packageName = packageJson.name;
+const packageDescription = packageJson.description;
+const [node, script, resource, handler] = process.argv;
+
+if (!(resource && handler)) {
+  console.error('arguments required: resource and handler');
+  process.exit(1);
+}
+
+console.log(`Generating Lambda Function...`);
+const functionDef = generateDataFunction(resource, handler);
+
+console.log(`Generating template updates...`);
+const templateDef = merge(
+  {},
+  Template({}, {}, packageDescription),
+  functionDef
+);
+
+console.log('Updating template.json...')
+mergeTemplate(functionDef)
+  .then(() => {
+    console.log('Done.');
+    process.exit(0);
+  })
+  .catch(err => {
+    console.error(`Failed to write file: ${err}`);
+    process.exit(1);
+  });

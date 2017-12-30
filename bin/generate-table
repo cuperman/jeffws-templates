@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+
+const { merge } = require('lodash');
+
+const packageJson = require('../package.json');
+const Template = require('../src/template');
+const { generateTable } = require('../src/generators');
+const { mergeTemplate } = require('../src/cli');
+
+const packageName = packageJson.name;
+const packageDescription = packageJson.description;
+const [node, script, resource, hashKeyDesc, rangeKeyDesc] = process.argv;
+
+if (!resource) {
+  console.error('argument required: resource');
+  process.exit(1);
+}
+
+console.log(`Generating DynamoDB Table...`);
+const tableDef = generateTable(resource, 'ID', 'S');
+
+console.log(`Generating template updates...`);
+const templateDef = merge(
+  {},
+  Template({}, {}, packageDescription),
+  tableDef
+);
+
+console.log('Updating template.json...')
+mergeTemplate(templateDef)
+  .then(() => {
+    console.log('Done.');
+    process.exit(0);
+  })
+  .catch(err => {
+    console.error(`Failed to write file: ${err}`);
+    process.exit(1);
+  });
